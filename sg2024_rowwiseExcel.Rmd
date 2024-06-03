@@ -1,0 +1,99 @@
+---
+title: "sg2024_rowwiselikeExcel"
+author: "NA"
+date: "2023-12-27"
+output: html_document
+---
+
+# load excel and packages
+
+```{r}
+#Can use point and click if in files pane to open
+sg2024 <- read_excel("SalaryGrade2024/SGincrease_2024proposed.xlsx") 
+
+library(dplyr)
+```
+
+
+# compute percentage change
+
+confirm that 10% increase from previous year
+
+```{r}
+
+sg2024<-sg2024 %>%  mutate(percentage_change=( (sg16-lag(sg16)) /lag(sg16) ) ) 
+sg2024<-sg2024 %>%  mutate(difference=(sg16-lag(sg16)) )  
+
+```
+
+
+# exercise: compute salary if there is 5th tranche
+
+
+```{r}
+sg3<-sg2024 %>% add_row(Tranche="5th")
+
+new_rows<-sg3 %>% mutate(sg16=case_when(is.na(sg16)~lag(sg16)+0.10*lag(sg16) ) )
+new_rows<-new_rows %>% filter(!is.na(new_rows$sg16) )
+
+sg2024<-rbind(sg2024, new_rows)
+
+sg2024<-sg2024 %>%  mutate(percentage_change=( (sg16-lag(sg16)) /lag(sg16) ) ) 
+
+```
+
+
+remove 
+```{r}
+# rm(sg3, new_rows)
+```
+
+# Loops to create sequence of increased salary by tranche
+
+```{r}
+# a<-43639 #tranche 1 monthly salary
+# n<-8 #number of tranches into future
+# r<-0.10 # 10% rate of annual increase from previous tranche salary, per the bill
+
+
+  #serve as calculator. 
+# sg16<-43639
+# for(i in 1:4) {
+#   sg16=sg16 +.10*sg16
+# }
+
+
+  #as vector of numbers
+sg16a=c()
+sg16a[1]=43639
+for(i in 2:10) {
+  sg16a[i]=sg16a[i-1]+sg16a[i-1]*0.10
+}
+
+
+sg18a=c()
+sg18a[1]=56493
+for(i in 2:10) {
+  sg18a[i]=sg18a[i-1]+sg18a[i-1]*0.10
+}
+
+
+year=c()
+year[1]<-2024
+for(i in 2:10) {
+  year[i]=year[i-1]+1
+}
+
+sg16<-as.data.frame(sg16a)
+sg18<-as.data.frame(sg18a)
+year<-as.data.frame(year)
+
+sg2024_2<-cbind(year,sg16, sg18)
+
+sg2024_2<-sg2024_2 %>% rename('sg19a'='sg18a') 
+
+sg2024_2 %>% mutate(diff1619=sg19a-sg16a )
+
+
+```
+
